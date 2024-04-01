@@ -1,0 +1,7 @@
+{
+    "work_path":"your_path/RNN_Neo",
+    "ref_path":"your_path/RNN_Neo/ref",
+    "annotation_path":"your_path/RNN_Neo/ref/anno",
+    "annovar_path":"your_path/RNN_Neo/software/annovar",
+    "bigmhc_path":"your_path/RNN_Neo/software/bigmhc/src"
+}
