@@ -34,7 +34,7 @@ def write_time_log(f_time, A, s):
     f_time.flush()
 
 
-#上游分析
+
 def wes2mut(thread,patient_id,tumor1,tumor2,normal1,normal2):
     wes_path = parameter['work_path'] + '/calspace/' + patient_id + '/1_wes'
     create_path(wes_path)
@@ -249,10 +249,8 @@ def get_snv_pep(pep_length,hla_list,patient_id,n=10,snv=None):
         muttype_mutinfo_ls = [x.strip().split('\t')[1:3] for x in snv_file_fo_lines]
         muttype_mutinfo_ls = [[x[0], x[1].split(',')[0]] for x in muttype_mutinfo_ls]
 
-        ### 去掉不产生新抗原的突变 ###
         muttype_mutinfo_filtered_ls = [x for x in muttype_mutinfo_ls if x[0] == 'nonsynonymous SNV']
 
-        ### 去掉序列含 “X” 的突变 ###
         muttype_mutinfo_filtered_ls = [x for x in muttype_mutinfo_filtered_ls if not 'X' in x[1].split(':')[-1]]
         fw = open(snv_mut_vcf_anno_screened, 'w+')
         for i in muttype_mutinfo_filtered_ls:
@@ -303,8 +301,7 @@ def get_snv_pep(pep_length,hla_list,patient_id,n=10,snv=None):
     fr.close()
     lines = [x.strip().split('\t') for x in lines]
 
-    ### 从 NCBI 获取原始基因，蛋白序列 ###
-    ## 蛋白
+
     nm_ls = []
     for j in lines:
         nmid = j[1].split(":")[1]
@@ -323,7 +320,7 @@ def get_snv_pep(pep_length,hla_list,patient_id,n=10,snv=None):
     lines = fr.readlines()
     fr.close()
     muttype_mutinfo_filtered_ls = [x.strip().split('\t') for x in lines]
-    ### 原始序列读取成字典 ###
+
     nm_pro_dict = {}
     with open(snv_path+'/protein_fasta.info.txt') as fo:
         nm_fa_lines = fo.readlines()
@@ -351,7 +348,7 @@ def get_snv_pep(pep_length,hla_list,patient_id,n=10,snv=None):
                 info.append([i[0], i[1], raw, neo, long_pep,str(start), str(end), str(j)])
             
             
-    ### 写进信息文件 ###
+
     mut_pep_info = snv_path+ '/mut_pep_info.txt'
     fw = open(mut_pep_info,'w+')
 
@@ -361,14 +358,14 @@ def get_snv_pep(pep_length,hla_list,patient_id,n=10,snv=None):
         fw.flush()
     fw.close()
 
-    #combine
+
 
     gene_tpm = pd.read_csv(rna_path + '/tumor_gene.csv')
     dict_gene_tpm = gene_tpm.groupby('gene_name')['gene_tpm'].mean().to_dict()
 
-    ###读取HLA###
+
     hla = ';'.join(hla_list)
-    ### 读突变信息文件 ###
+
 
     all_in_one_ls = []
     with open(snv_path + '/mut_pep_info.txt','r') as fo_mut_pep_info:
@@ -417,13 +414,12 @@ def get_indel_pep(pep_length,hla_list,patient_id,n=10,indel=None):
         muttype_mutinfo_ls = [x.strip().split('\t')[1:3] for x in indel_file_fo_lines]
         muttype_mutinfo_ls = [[x[0],x[1].split(',')[0]] for x in muttype_mutinfo_ls]
 
-        ### 去掉不产生新抗原的突变 ###
         muttype_mutinfo_filtered_ls = [x for x in muttype_mutinfo_ls if not x[0] in ['unknown','startloss','stopgain']]
 
-        ### 去掉序列含 “X” 的突变 ###
+
         muttype_mutinfo_filtered_ls = [x for x in muttype_mutinfo_filtered_ls if not 'X' in x[1].split(':')[-1]]
 
-        ### 保存 ###
+
         fw = open(indel_mut_vcf_anno_screened,'w+')
         for i in muttype_mutinfo_filtered_ls:
             i_word = '\t'.join(i)+'\n'
@@ -471,8 +467,7 @@ def get_indel_pep(pep_length,hla_list,patient_id,n=10,indel=None):
         print('download seq {}'.format(len(df)))
         return df
     
-    ### 从 NCBI 获取原始基因，蛋白序列 ###
-    ## 蛋白
+
     nm_ls = []
     for j in lines:
         nmid = j[1].split(":")[1]
@@ -484,7 +479,7 @@ def get_indel_pep(pep_length,hla_list,patient_id,n=10,indel=None):
     info.to_csv(indel_path + '/protein_fasta.info.txt',sep='\t', header=False, index=False)
     print('Protein sequence is now available')
 
-    ## 基因
+
     def get_seq(email, id_ls):
         Entrez.email = email  
         id_ls = list(set(id_ls))
@@ -527,7 +522,7 @@ def get_indel_pep(pep_length,hla_list,patient_id,n=10,indel=None):
     fr.close()
     muttype_mutinfo_filtered_ls = [x.strip().split('\t') for x in lines]
 
-    ### 原始序列读取成字典 ###
+
     nm_pro_dict = {}
     with open(indel_path+'/protein_fasta.info.txt') as fo:
         nm_fa_lines = fo.readlines()
@@ -542,14 +537,13 @@ def get_indel_pep(pep_length,hla_list,patient_id,n=10,indel=None):
             nm_fa_line = nm_fa_line.strip().split('\t')
             nm_rna_dict[nm_fa_line[0]] = nm_fa_line[1]
 
-    ### 获取突变序列 ###
     info = []
     for j in muttype_mutinfo_filtered_ls:
         
-        ### 非移码突变引起的INDEL，此时不需要cDNA序列即可获得新抗原肽 ###
+
         if j[0] in ['nonframeshift insertion', 'nonframeshift deletion', 'stoploss']:
             
-            ### 蛋白序列
+
             mut_info = j[1].split(':')
             if mut_info[1] in nm_pro_dict:
                 protein = nm_pro_dict[mut_info[1]]
@@ -557,14 +551,14 @@ def get_indel_pep(pep_length,hla_list,patient_id,n=10,indel=None):
                 protein = ''
                 print(mut_info[1]+' has no seq !!')
             
-            ### 情况一：仅插入
+
             if j[0] == 'nonframeshift insertion' and 'delins' not in mut_info[-1]:
                 
-                ### 异常报错
+
                 if ('ins' not in mut_info[-1]) or ('_' not in mut_info[-1]) or ('*' in mut_info[-1]):
                     print(j)
                 
-                ### 正常计算
+
                 else:
                     ins_seq = mut_info[-1].split('ins')[-1]
                     s = re.findall('\d+',mut_info[-1])
@@ -590,10 +584,10 @@ def get_indel_pep(pep_length,hla_list,patient_id,n=10,indel=None):
                     info.append(j+[protein,protein_mutted,ins_site,pep_space])
                     # print(pep_space)
                     
-            ### 情况二：仅缺失
+
             elif j[0] == 'nonframeshift deletion' and 'delins' not in mut_info[-1]:
                     
-                ### 缺失一个氨基酸
+
                 if '_' not in mut_info[-1]:
                     
                     s = int(re.findall('\d+',mut_info[-1])[0])
@@ -617,7 +611,7 @@ def get_indel_pep(pep_length,hla_list,patient_id,n=10,indel=None):
                     info.append(j+[protein,protein_mutted,del_site,pep_space])
                     # print(pep_space)
                 
-                ### 缺失多个氨基酸
+
                 else:
                     
                     s = re.findall('\d+',mut_info[-1])
@@ -644,10 +638,10 @@ def get_indel_pep(pep_length,hla_list,patient_id,n=10,indel=None):
                     info.append(j+[protein,protein_mutted,del_site,pep_space])
                     # print(pep_space)
             
-            ### 情况三：stoploss（终止子被破坏，往后翻译到新的终止子），有两种形式。
+
             elif j[0] == 'stoploss':
                 
-                ### 1：类似：p.*277delinsLRQ*，终止密码子被破坏
+
                 if '_' not in mut_info[-1] and 'delins' in mut_info[-1]:
                     ins_seq = mut_info[-1].split('ins')[-1]
                     ins_seq = ins_seq[:-1]
@@ -661,7 +655,7 @@ def get_indel_pep(pep_length,hla_list,patient_id,n=10,indel=None):
                     info.append(j+[protein,protein_mutted,change_site,pep_space])
                     # print(j,pep_space)
             
-                ### 2：p.G682_683insRLSYPHPGTDNLL*，终止子和前一位之间被破坏
+  
                 elif '_' in mut_info[-1]:
                     ins_seq = mut_info[-1].split('ins')[-1]
                     ins_seq = ins_seq[:-1]
@@ -680,10 +674,10 @@ def get_indel_pep(pep_length,hla_list,patient_id,n=10,indel=None):
                     continue
                 
             
-            ### 情况四：含有 delins
+
             elif j[0] in ['nonframeshift insertion','nonframeshift deletion'] and 'delins' in mut_info[-1]:
                 
-                ### 删除多个氨基酸后插入
+
                 if "_" in mut_info[-1]:
                     s = re.findall('\d+',mut_info[-1])
                     s0 = int(s[0])
@@ -711,7 +705,7 @@ def get_indel_pep(pep_length,hla_list,patient_id,n=10,indel=None):
                     
                     info.append(j+[protein,protein_mutted,del_site,pep_space])
                 
-                ### 删除1个氨基酸后插入
+
                 else:
                     s = int(re.findall('\d+',mut_info[-1])[0])
                     ins = mut_info[-1].split('delins')[1]
@@ -732,20 +726,20 @@ def get_indel_pep(pep_length,hla_list,patient_id,n=10,indel=None):
                     
                     info.append(j+[protein,protein_mutted,del_site,pep_space])
 
-            ### 情况五：其他情况
+
             else:
                 print('other')
                 print(j)
                 continue
                 
-        ### 移码突变引起的INDEL，需要cDNA序列用来获得新抗原肽 ###
+
         elif j[0] in ['frameshift insertion', 'frameshift deletion']:
             mut_info = j[1].split(':')
             if mut_info[1] in nm_pro_dict and mut_info[1] in nm_rna_dict:
                 protein = nm_pro_dict[mut_info[1]]
                 cdna = nm_rna_dict[mut_info[1]]
                 
-                ### 插入移码
+
                 if j[0] == 'frameshift insertion':
                     
                     ### dup型
@@ -755,7 +749,7 @@ def get_indel_pep(pep_length,hla_list,patient_id,n=10,indel=None):
                         dup_cDNA_site = mut_info[3].split('dup')[0].split('.')[-1]
                         dup_cDNA_site = int(dup_cDNA_site)
                         
-                        ## 检查cDNA该位点是否是突变信息中的base
+
                         if cdna[dup_cDNA_site-1] == dup_base:
                             
                             cDNA_new = cdna[:dup_cDNA_site]+dup_base+cdna[dup_cDNA_site:]
@@ -780,7 +774,7 @@ def get_indel_pep(pep_length,hla_list,patient_id,n=10,indel=None):
                             print('base info error: '+str(j))
                             continue
                     
-                    ### 普通插入移码
+      
                     elif '_' in mut_info[3]:
                         ins_base_site = int(mut_info[3].split('.')[1].split('_')[0])
                         ins_base = mut_info[3].split('ins')[1]
@@ -803,14 +797,14 @@ def get_indel_pep(pep_length,hla_list,patient_id,n=10,indel=None):
                         
                         info.append(j+[protein_old,protein_new,str(change_site),pep_space])
                     
-                    ### 其他类型报错
+
                     else:
                         print('unknow type: '+str(j))
                     
-                ### 缺失移码
+
                 if j[0] == 'frameshift deletion':
                     
-                    ### 缺1个碱基
+ 
                     if '_' not in mut_info[3]:
                         del_base_site = int(mut_info[3].split('.')[1].split('del')[0])
                         ins_base = mut_info[3].split('del')[1]
@@ -834,7 +828,7 @@ def get_indel_pep(pep_length,hla_list,patient_id,n=10,indel=None):
                         info.append(j+[protein_old,protein_new,str(change_site),pep_space])
                         # print(change_site,pep_space)
                     
-                    ### 缺多个碱基
+
                     else:
                         del_start_site = mut_info[3].split('.')[1].split('del')[0].split('_')[0]
                         del_end_site = mut_info[3].split('.')[1].split('del')[0].split('_')[1]
@@ -866,11 +860,11 @@ def get_indel_pep(pep_length,hla_list,patient_id,n=10,indel=None):
                 # print(mut_info[1]+' has no seq !!')
                 continue
         
-        ### 其他突变类型
+
         else:
             print('other mut type: '+str(j))
 
-    ### 写进信息文件 ###
+
     mut_pep_info = indel_path +'/mut_pep_info.txt'
     fw = open(mut_pep_info,'w+')
 
@@ -900,7 +894,7 @@ def get_indel_pep(pep_length,hla_list,patient_id,n=10,indel=None):
                 info.append([i[0], i[1], slide_neo, long_pep, str(start), str(end),str(j)])
             
             
-    ### 写进信息文件 ###
+
     mut_pep_info = indel_path+'/mut_pep_info.txt'
     fw = open(mut_pep_info,'w+')
 
@@ -912,9 +906,9 @@ def get_indel_pep(pep_length,hla_list,patient_id,n=10,indel=None):
     gene_tpm = pd.read_csv(rna_path + '/tumor_gene.csv')
     dict_gene_tpm = gene_tpm.groupby('gene_name')['gene_tpm'].mean().to_dict()
 
-    ###读取HLA###
+
     hla = ';'.join(hla_list)
-    ### 读突变信息文件 ###
+
 
     all_in_one_ls = []
     with open(indel_path + '/mut_pep_info.txt','r') as fo_mut_pep_info:
@@ -947,11 +941,11 @@ def snv_indel_combine(patient_id):
     neo_path = parameter['work_path'] + '/calspace/' + patient_id + '/4_neo'
     snv_path = neo_path + '/snv'
     indel_path = neo_path + '/indel'
-    ##读取snv文件
+
     snv_file = snv_path + '/neo_snv_result.txt'
     snv_file = pd.read_csv(snv_file, sep='\t')
     snv_file['SNV/INDEL'] = 'SNV'
-    ##读取indel文件
+
     indel_file = indel_path + '/neo_indel_result.txt'
     indel_file = pd.read_csv(indel_file, sep='\t')
     indel_file['SNV/INDEL'] = 'INDEL'
@@ -977,12 +971,12 @@ def execute_command(command,file=None):
         print(f"Executing: {command}")
 
 def merge_files(output_dir, merged_file_name):
-    # 新的合并文件的完整路径
+
     merged_file_path = os.path.join(output_dir, merged_file_name)
 
-    # 初始化合并文件
+
     with open(merged_file_path, 'w') as merged_file:
-        # 遍历拆分后的FASTA文件
+
         split_files = [f for f in os.listdir(output_dir) if f.endswith('.out')]
         def sort_key(filename):
             return int(''.join(re.findall(r'\d+', filename)))
@@ -990,37 +984,37 @@ def merge_files(output_dir, merged_file_name):
 
         for split_file in sorted_split_files:
             print(split_file)
-            # 构建拆分文件的完整路径
+
             split_file_path = os.path.join(output_dir, split_file)
-            # 读取拆分文件的内容
+
             with open(split_file_path, 'r') as split_file_handle:
-                # 将拆分文件的内容追加到合并文件中
+
                 merged_file.write(split_file_handle.read())
 
     print(f'All files have been merged into {merged_file_path}')
 
 def split_fasta_file(input_file, num_files, output_dir):
-    # 确保输出目录存在，如果不存在则创建
+
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     
-    # 读取输入的FASTA文件
+
     seq_records = list(SeqIO.parse(input_file, "fasta"))
     
-    # 计算每个文件应该包含的记录数
+
     records_per_file = len(seq_records) // num_files
-    # 处理余数，将余数分配到前几个文件中
+
     remainder = len(seq_records) % num_files
     record_counts = [records_per_file + 1] * remainder + [records_per_file] * (num_files - remainder)
     
-    # 初始化文件索引
+
     file_index = 0
     
-    # 拆分序列到不同的文件
+
     for i in range(num_files):
         output_file = os.path.join(output_dir, f"split_{i+1}.fsa")
         with open(output_file, "w") as f:
-            # 写入指定数量的记录
+
             for j in range(record_counts[i]):
                 if file_index < len(seq_records):
                     record = seq_records[file_index]
@@ -1030,18 +1024,18 @@ def split_fasta_file(input_file, num_files, output_dir):
     print(f"FASTA file has been successfully split into {num_files} files in the '{output_dir}' directory.")
 
 def split_csv_file(input_file, n, output_dir):
-    # 确保输出目录存在
+
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     
-    # 读取原始 CSV 文件
+
     df = pd.read_csv(input_file)
     
-    # 计算每个文件应该有多少行
+
     chunk_size = len(df) // n
     remainder = len(df) % n
     
-    # 分块处理数据
+
     for i in range(n):
         start = i * chunk_size
         if i < remainder:
@@ -1049,41 +1043,41 @@ def split_csv_file(input_file, n, output_dir):
         else:
             end = start + chunk_size
         
-        # 创建一个新的 DataFrame，包含原始列名
+
         chunk_df = df.iloc[start:end]
         
-        # 写入新的 CSV 文件
+
         output_file = os.path.join(output_dir, f'split_{i+1}.csv')
         chunk_df.to_csv(output_file, index=False)
 
 def merge_csv_file(directory,merged_file_name):
-    # 获取目录中所有 CSV 文件的列表
+
     csv_files = [f for f in os.listdir(directory) if f.endswith('.out.csv')]
     
-    # 确保文件是按照预期的顺序命名的
+
     csv_files.sort(key=lambda x: int(x.split('_')[-1].split('.csv')[0]))
     
-    # 初始化一个空的 DataFrame 用于合并
+
     merged_df = pd.DataFrame()
     
-    # 遍历所有 CSV 文件并合并
+
     for file in csv_files:
         file_path = os.path.join(directory, file)
         df = pd.read_csv(file_path)
         merged_df = pd.concat([merged_df, df], ignore_index=True)
     
-    # 写入新的合并后的 CSV 文件
+
     merged_df.to_csv(merged_file_name, index=False)
 
 
 def execute_batch_commands(commands):
-    # 创建并启动每个进程
+
     processes = []
     for command in commands:
         p = multiprocessing.Process(target=execute_command, args=(command,))
         p.start()
         processes.append(p)
-    # 等待所有进程完成
+
     for p in processes:
         p.join()
     print("Batch commands have been executed.")
@@ -1163,7 +1157,7 @@ def feature_cal(pep_length,hla_list,patient_id):
     netmhcpan_path = feature_path + '/netmhcpan'
     prime_path = feature_path + '/prime'
 
-    # ---------------------------------- log文件输出 --------------------------------- #
+    # ---------------------------------- log --------------------------------- #
     f_time = open(feature_path + '/feature_time.log','w+')
 
     f_time.write('***** feature cal start!*****\n')
@@ -1277,7 +1271,7 @@ def feature_cal(pep_length,hla_list,patient_id):
     
 
     batch_size = 2
-    # 分批次执行命令
+
     while commands:
         batch_commands = commands[:batch_size]
         execute_batch_commands(batch_commands)
@@ -1469,19 +1463,19 @@ def feature_merge(pep_length,hla_list,patient_id):
 
 
 def snv_n(protein, s, neo_aa, n:int):
-    ### 前有余，后有余
+
     if s >= n + 1 and s <= len(protein) - n:
         pep_space_raw = protein[s - n - 1:s + n]
         pep_space_neo = protein[s - n - 1:s - 1] + neo_aa + protein[s:s + n]
-    ### 前不足，后有余
+
     elif s < n + 1 and s <= len(protein) - n:
         pep_space_raw = protein[:s + n]
         pep_space_neo = protein[:s - 1] + neo_aa + protein[s:s + n]
-    ### 前有余，后不足
+
     elif s >= n + 1 and s > len(protein) - n:
         pep_space_raw = protein[s - n - 1:]
         pep_space_neo = protein[s - n - 1:s - 1] + neo_aa + protein[s:]
-    ### 前不足，后不足
+
     else:
         pep_space_raw = protein[:]
         pep_space_neo = protein[:s - 1] + neo_aa + protein[s:]
@@ -1589,7 +1583,7 @@ def bind_all_model(data_path,model_path, cols_list, input_size, hidden_size, out
     for _, cols in enumerate(cols_list):
         for file in os.listdir(model_path):
             if file.endswith('{}_{}.pkl'.format(cols[-2], cols[-1])):
-                print('****正在处理'+file)
+                print('****'+file)
                 model = RNN(input_size, hidden_size, output_size).to(device)
                 model.load_state_dict(torch.load(model_path+'/'+file,map_location=device))
                 test_data,test_loader = makedata(path = data_path, cols = cols,  batch_size = batch_size, shuffle_ = False)
@@ -1754,7 +1748,7 @@ def feature_cal2(pep_path,hla_list,patient_id):
     df['length'] = df['pep'].apply(len)
     pep_length = list(set(df['length']))
 
-    # ---------------------------------- log文件输出 --------------------------------- #
+    # ---------------------------------- log--------------------------------- #
     f_time = open(feature_path + '/feature_time.log','w+')
 
     f_time.write('***** feature cal start!*****\n')
@@ -1868,7 +1862,7 @@ def feature_cal2(pep_path,hla_list,patient_id):
     
 
     batch_size = 2
-    # 分批次执行命令
+
     while commands:
         batch_commands = commands[:batch_size]
         execute_batch_commands(batch_commands)
@@ -2079,11 +2073,11 @@ def snv_indel_combine2(snv,indel,patient_id):
     indel_path = neo_path + '/indel'
     
     if snv is not None and indel is not None:
-        ##读取snv文件
+
         snv_file = snv_path + '/neo_snv_result.txt'
         snv_file = pd.read_csv(snv_file, sep='\t')
         snv_file['SNV/INDEL'] = 'SNV'
-        ##读取indel文件
+
         indel_file = indel_path + '/neo_indel_result.txt'
         indel_file = pd.read_csv(indel_file, sep='\t')
         indel_file['SNV/INDEL'] = 'INDEL'
@@ -2111,7 +2105,7 @@ def snv_indel_combine2(snv,indel,patient_id):
         snv_file.to_csv(output, index=False)
         print('snv pep done')
     else:
-        ##读取indel文件
+
         indel_file = indel_path + '/neo_indel_result.txt'
         indel_file = pd.read_csv(indel_file, sep='\t')
         indel_file['SNV/INDEL'] = 'INDEL'
